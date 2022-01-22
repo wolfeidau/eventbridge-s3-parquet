@@ -1,0 +1,6 @@
+output:
+  create-object-types.gen.go
+generate:
+  - types
+  - skip-prune
+package: awss3
