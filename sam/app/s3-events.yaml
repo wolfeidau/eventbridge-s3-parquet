@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "stream: event data stream using kinesis firehose, a @wolfeidau template"
+
+Parameters:
+  AppName:
+    Type: String
+    Description: The name of the application.
+
+  Stage:
+    Type: String
+    Description: The stage where the application is running in, e.g., dev, prod.
+    Default: "dev"
+
+  Branch:
+    Type: String
+    Default: "master"
+
+  DataBucketName:
+    Type: String
+
+Conditions:
+  IsDev: !Equals [!Ref Stage, "dev"]
+
+Globals:
+  Function:
+    Runtime: go1.x
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        APP_NAME: !Ref AppName
+        STAGE: !Ref Stage
+        BRANCH: !Ref Branch
+        RAW_EVENT_LOGGING: !If [IsDev, "true", "false"]
+
+Resources:
+  S3EventsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../dist/handler.zip
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref DataBucketName
+      Environment:
+        Variables:
+          DATA_BUCKET_NAME: !Ref DataBucketName
+      Handler: s3-events-lambda
+      Events:
+        S3EventRule:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source:
+                - "aws.s3"
+              "detail-type":
+                - "Object Created"
+              detail:
+                bucket:
+                  name:
+                    - !Ref DataBucketName

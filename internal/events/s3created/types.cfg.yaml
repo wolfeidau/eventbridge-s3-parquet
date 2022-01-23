@@ -3,4 +3,4 @@ output:
 generate:
   - types
   - skip-prune
-package: awss3
+package: s3created

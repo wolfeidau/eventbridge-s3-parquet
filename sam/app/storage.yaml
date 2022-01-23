@@ -2,6 +2,19 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: 'storage: event data storage, a @wolfeidau template'
 
+Parameters:
+  AppName:
+    Type: String
+    Description: The name of the application.
+
+  Stage:
+    Type: String
+    Description: The stage where the application is running in, e.g., dev, prod.
+    Default: "dev"
+
+  Branch:
+    Type: String
+    Default: "master"
 
 Outputs:
   DataBucketName:
@@ -43,3 +56,11 @@ Resources:
             Condition:
               Bool:
                 "aws:SecureTransport": "false"
+
+  DataBucketName:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/config/${Stage}/${Branch}/${AppName}/data_bucket_name"
+      Type: "String"
+      Value: !Ref DataBucket
+      Description: "Data bucket name"
